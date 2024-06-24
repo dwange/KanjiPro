@@ -5,82 +5,62 @@
 //  Created by  Katya Savina on 24.05.2024.
 //
 import SwiftUI
-import SVGView
+
+struct Stroke {
+    var points: [CGPoint] = []
+}
 
 struct Drawing {
-    var strokes: [[CGPoint]] = []
+    var strokes: [Stroke] = []
 }
 
 struct DrawingAreaView: View {
-    
     @Binding var drawing: Drawing
     @Binding var currentStroke: [CGPoint]
- //   let kanjiCharacter: String
- //   @State private var svgFileName: String?
-
+    
     var body: some View {
-        ZStack {
-            // Render the SVG kanji character as a background
-//            if let svgName = svgName {
-//                if let svgFilePath = getSVGFilePath(svgName: svgName) {
-//                    SVGView(contentsOf: URL(fileURLWithPath: svgFilePath))
-//                        .aspectRatio(contentMode: .fit)
-//                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-//                        
-//                        .padding(50)
-//                } else {
-//                    Text("SVG file not found.")
-//                }
-//            }
-            
-            // Add the drawing gesture and path rendering on top of the SVG
-            Rectangle()
-                .fill(Color.clear) // Make the Rectangle clear to see the SVG background
-                .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { value in
-                            let currentPoint = value.location
-                            currentStroke.append(currentPoint)
+        GeometryReader { geometry in
+            ZStack {
+                ForEach(0..<drawing.strokes.count, id: \.self) { strokeIndex in
+                    let stroke = drawing.strokes[strokeIndex]
+                    Path { path in
+                        for (i, point) in stroke.points.enumerated() {
+                            if i == 0 {
+                                path.move(to: point)
+                            } else {
+                                path.addLine(to: point)
+                            }
                         }
-                        .onEnded { _ in
-                            drawing.strokes.append(currentStroke)
-                            currentStroke = []
-                        }
-                )
-            
-            // Render the strokes drawn by the user
-            ForEach(drawing.strokes.indices, id: \.self) { index in
+                    }
+                    .stroke(Color.black, lineWidth: 2)
+                }
                 Path { path in
-                    for (pointIndex, point) in drawing.strokes[index].enumerated() {
-                        if pointIndex == 0 {
+                    for (i, point) in currentStroke.enumerated() {
+                        if i == 0 {
                             path.move(to: point)
                         } else {
                             path.addLine(to: point)
                         }
                     }
                 }
-                .stroke(Color.black, lineWidth: 2)
+                .stroke(Color.red, lineWidth: 2)
             }
+            .background(Color.clear)
+            .contentShape(Rectangle())
+            .gesture(DragGesture(minimumDistance: 0)
+                .onChanged { value in
+                    let newPoint = value.location
+                    if geometry.frame(in: .local).contains(newPoint) {
+                        currentStroke.append(newPoint)
+                    }
+                }
+                .onEnded { _ in
+                    drawing.strokes.append(Stroke(points: currentStroke))
+                    currentStroke = []
+                }
+            )
         }
-        .aspectRatio(1, contentMode: .fit)
-//        .onAppear {
-//            loadMappingAndFindSvgFile()
-//        }
     }
-    
-//    private func loadMappingAndFindSvgFile() {
-//        DispatchQueue.global(qos: .userInitiated).async {
-//            let mapping = loadKanjiMapping()
-//            let foundSvgFileName = findSvgFileName(for: kanjiCharacter, in: mapping)
-//            DispatchQueue.main.async {
-//                self.svgFileName = foundSvgFileName
-//            }
-//        }
-//    }
 }
 
 
-
-//#Preview {
-//    DrawingAreaView()
-//}

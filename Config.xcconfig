@@ -1,0 +1,12 @@
+//
+//  Config.xcconfig
+//  KanjiPro
+//
+//  Created by  Katya Savina on 20.06.2024.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+
+API_KEY = "a87b94926dmshc6de706fbe6f731p10a78ajsnbadc85bc3bc0"

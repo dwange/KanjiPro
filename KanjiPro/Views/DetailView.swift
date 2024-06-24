@@ -9,7 +9,7 @@ import SwiftUI
 import SVGView
 
 struct DetailView: View {
-   
+    
     @ObservedObject var kanjiDetailManager: KanjiDetailManager
     var selectedKanji: String
     
@@ -18,49 +18,62 @@ struct DetailView: View {
     
     @State private var drawing = Drawing()
     @State private var currentStroke: [CGPoint] = []
-
+    
+    
+    
     var body: some View {
         VStack(spacing: 10) {
             VStack {
                 Form {
                     HStack {
-                        Text(kanjiDetailManager.kanjiObject?.kanji.character ?? "No data received")
+                        Text(kanjiDetailManager.kanjiObject?.kanji ?? "No data received")
                             .font(.largeTitle)
                             .padding(20)
-                        Text(kanjiDetailManager.kanjiObject?.kanji.meaning.english ?? "")
+                        if let meanings = kanjiDetailManager.kanjiObject?.meanings {
+                            Text(meanings.joined(separator: ", "))
+                        } else {
+                            Text("No meanings available")
+                        }
                     }
-                    Text(kanjiDetailManager.kanjiObject?.kanji.onyomi.katakana ?? "")
-                    Text(kanjiDetailManager.kanjiObject?.kanji.kunyomi.hiragana ?? "")
-                    Text("Grade \(String(kanjiDetailManager.kanjiObject?.references.grade ?? 0))")
-                    Text("Number of strokes \(String(kanjiDetailManager.kanjiObject?.kanji.strokes.count ?? 0))")
-                }
-                
-                ZStack {
+                        if let on_readings = kanjiDetailManager.kanjiObject?.on_readings {
+                            Text("Onoyoumi reading: \(on_readings.joined(separator: ", "))")
+                        } else {
+                            Text("No on_readings available")
+                        }
+                        if let kun_readings = kanjiDetailManager.kanjiObject?.kun_readings {
+                            Text("Kunoyoumi reading: \(kun_readings.joined(separator: ", "))")
+                        } else {
+                            Text("No kun_readings available")
+                            
+                        }
                     
+                        Text("Grade:  \(kanjiDetailManager.kanjiObject?.grade ?? 0)")
+                        Text("Number of strokes: \(kanjiDetailManager.kanjiObject?.stroke_count ?? 0)")
+                    }
+
+                ZStack {
                     DrawingAreaView(drawing: $drawing, currentStroke: $currentStroke
-                             //       , kanjiCharacter: selectedKanji
                     )
-                        .border(.indigo)
-                        .padding(50)
-                        
+                    .border(.indigo)
+                    .padding(50)
+                    .allowsHitTesting(true)
+                    
                     if let svgName = svgName {
                         if let svgFilePath = getSVGFilePath(svgName: svgName) {
                             SVGView(contentsOf: URL(fileURLWithPath: svgFilePath))
                                 .aspectRatio(contentMode: .fit)
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                
+                                .opacity(0.2)
                                 .padding(50)
                         } else {
                             Text("SVG file not found.")
                         }
                     }
-                 
-                    
                 }
             }
         }
         .onAppear {
-            print("DetailsView appeared with selectedKanji: \(selectedKanji)")
+            //            print("DetailsView appeared with selectedKanji: \(selectedKanji)")
             kanjiDetailManager.fetchKanjiDetails(kanji: selectedKanji)
             mapKanjiToSVG()
         }
@@ -71,9 +84,9 @@ struct DetailView: View {
     
     private func mapKanjiToSVG() {
         DispatchQueue.global(qos: .userInitiated).async {
-            print("Mapping kanji to SVG...")
+            //       print("Mapping kanji to SVG...")
             if let svgFiles = kanjiMapping[selectedKanji], let firstSvgFile = svgFiles.first {
-                print("Found SVG file: \(firstSvgFile) for kanji: \(selectedKanji)")
+                //                print("Found SVG file: \(firstSvgFile) for kanji: \(selectedKanji)")
                 DispatchQueue.main.async {
                     self.svgName = firstSvgFile
                 }
@@ -84,7 +97,6 @@ struct DetailView: View {
     }
     
     private func getSVGFilePath(svgName: String) -> String? {
-        // Specify the subdirectory "KanjiSVG"
         if let svgFilePath = Bundle.main.path(forResource: svgName, ofType: nil, inDirectory: "KanjiSVG") {
             print("SVG file path: \(svgFilePath)")
             return svgFilePath
@@ -93,9 +105,9 @@ struct DetailView: View {
             return nil
         }
     }
-
+    
 }
 
-//#Preview {
-//    DetailView(kanjiDetailManager: KanjiDetailManager(), selectedKanji: "向")
-//}
+#Preview {
+    DetailView(kanjiDetailManager: KanjiDetailManager(), selectedKanji: "向")
+}
